@@ -20,14 +20,14 @@ try:
                 name VARCHAR(20) NOT NULL,
                 subject VARCHAR(20) NOT NULL,
                 score INT(11) NOT NULL,
-                PRIMARY KEY (id)
+                PRIMARY KEY (name)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         '''
         cursor.execute(create_table_sql)
 
         # 插入数据
         insert_sql = '''
-            INSERT INTO scores (name, subject, score) VALUES
+            INSERT IGNORE INTO scores (name, subject, score) VALUES
                 ('张三', '语文', 90),
                 ('李四', '数学', 85),
                 ('王五', '英语', 95)
