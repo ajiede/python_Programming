@@ -1,4 +1,10 @@
+import os
+import pandas as pd
 import pymysql
+
+# 读取Excel文件
+excel_file = "students_scores.xlsx"  # 读取文件
+df = pd.read_excel(excel_file, sheet_name=None)  # None未指明哪张表名
 
 # 连接MySQL
 conn = pymysql.connect(
@@ -13,36 +19,54 @@ conn = pymysql.connect(
 # 执行SQL语句
 try:
     with conn.cursor() as cursor:
-        # 创建表格
-        create_table_sql = '''
-            CREATE TABLE IF NOT EXISTS scores (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                name VARCHAR(20) NOT NULL,
-                subject VARCHAR(20) NOT NULL,
-                score INT(11) NOT NULL,
-                PRIMARY KEY (name)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        '''
-        cursor.execute(create_table_sql)
-
-        # 插入数据
-        insert_sql = '''
-            INSERT IGNORE INTO scores (name, subject, score) VALUES
-                ('张三', '语文', 90),
-                ('李四', '数学', 85),
-                ('王五', '英语', 95)
-        '''
-        cursor.execute(insert_sql)
-
         # 查询数据
-        query_sql = "SELECT * FROM scores"
-        cursor.execute(query_sql)
+        while 1:
+            name = input("请输入你要查询人的姓名(输入0结束)：")
+            if name == "0":
+                break
+            query_sql = "SELECT * FROM students WHERE name = %s"
+            cursor.execute(query_sql, name)
+            result = cursor.fetchall()
+
+            for data in result:
+                print(data)
+
+            # 将需要比较的数据存储在一个列表中
+            data_to_compare = {data[1], data[2], data[3], data[4]}
+
+            # 遍历每个sheet表
+            for sheet_name, xls in df.items():
+                # 遍历需要比较的数据
+                if data[1] in xls.values and data[2] in xls.values \
+                        and data[3] in xls.values and data[4] in xls.values:
+                    print(f"{name} 存在这张表： {sheet_name}")
+                    print(data)
+                    break
+
+        selectAll_sql = "SELECT * FROM students"
+        cursor.execute(selectAll_sql)
         result = cursor.fetchall()
+        df_list = []
+        for data in result:
+            print(data)
+            # 将所有数据存储在一个DataFrame列表中
+            df_temp = pd.DataFrame(data).transpose()
+            df_list.append(df_temp)
+            # 将数据转换成 DataFrame 格式
+        df_to_write = pd.DataFrame(result, columns=['id', 'name', 'gender', 'age', 'score'])
 
-        for row in result:
-            print(row)
-
-    conn.commit()
+        # 将数据追加到现有的Excel文件中
+        # Excel文件路径
+        filename = 'new_student_scores.xlsx'
+        if os.path.exists(filename):
+            with pd.ExcelWriter(filename, mode='a', if_sheet_exists='new', engine='openpyxl') as writer:
+                sheet_name = 'Sheet' + str(len(writer.book.sheetnames) + 1)
+                pd.concat(df_list).to_excel(writer, sheet_name=sheet_name, index=False, header=False)
+        else:
+            # 如果文件不存在，则创建新文件并写入数据
+            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                pd.concat(df_list).to_excel(writer, sheet_name='Sheet1', index=False, header=False)
+    # conn.commit()
 
 except Exception as e:
     print(f"发生错误：{e}")
@@ -50,4 +74,5 @@ except Exception as e:
 
 finally:
     # 关闭连接
+    cursor.close()
     conn.close()

@@ -8,7 +8,6 @@ import os  # 操作文件 读取内存大小
 # 读取Excel文件
 excel_file = "students_scores.xlsx"  # 读取文件
 df = pd.read_excel(excel_file, sheet_name=None)  # 遍历sheet  None可以指明哪张表名
-
 # 输出所有内容
 print(df)
 
@@ -40,13 +39,15 @@ if table_exists(cursor, 'students') != 1:
     # 创建表
     create_table_query = """
     CREATE TABLE students(
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id INT AUTO_INCREMENT,
         name VARCHAR(50) NOT NULL,
         age INT,
-        gender VARCHAR(10)
+        gender VARCHAR(10),
+        scores INT,
+        PRIMARY KEY (id,name,age)
         # TODO: 添加更多字段
     )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    """
+    # """
     cursor.execute(create_table_query)
 
 # 将数据插入表中
@@ -55,7 +56,7 @@ for sheet_name in df.keys():
     for row in sheet.iterrows():  # 逐行遍历
         #    for row in df.iterrows():
         insert_query = """
-        INSERT IGNORE INTO students(name, age, gender) VALUES (%s, %s, %s) 
+        INSERT IGNORE INTO students(name, age, gender,scores) VALUES (%s, %s, %s,%s) 
         """
 
         values = tuple(row[1])  # 注意：这里需要转换为元组
