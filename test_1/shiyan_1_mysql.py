@@ -15,9 +15,9 @@ print(df)
 def table_exists(con, table_name):  # 这个函数用来判断表是否存在
     sql = "show tables;"
     con.execute(sql)
-    tables = [con.fetchall()]
-    table_list = re.findall('(\'.*?\')', str(tables))
-    table_list = [re.sub("'", '', each) for each in table_list]
+    tables = [con.fetchall()]  # 返回多个表单名
+    table_list = re.findall('(\'.*?\')', str(tables))  # 将表名字转为字符串
+    table_list = [re.sub("'", '', each) for each in table_list]  # 为指定内容 全检
     if table_name in table_list:
         return 1  # 存在返回1
     else:

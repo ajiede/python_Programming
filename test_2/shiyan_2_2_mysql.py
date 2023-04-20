@@ -24,6 +24,7 @@ try:
             name = input("请输入你要查询人的姓名(输入0结束)：")
             if name == "0":
                 break
+            # 修改sql查找条件，实现多样查询
             query_sql = "SELECT * FROM students WHERE name = %s"
             cursor.execute(query_sql, name)
             result = cursor.fetchall()
